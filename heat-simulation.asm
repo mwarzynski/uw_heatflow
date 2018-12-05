@@ -9,16 +9,16 @@ section .text
 section .data
     align 16 ; Align data to 16 bytes.
     ; Memory for the heat flow simulation.
-    board:  DQ 0     ; memory for the board
-    boardd: DQ 0     ; memory for the heat change across the board
-    width:  DD 0     ; width of the board
-    height: DD 0     ; height of the board
-    heater: DQ 0     ; heater heat value
-    cooler: DQ 0     ; cooler heat value
-    proportion: DD 0 ; proportion for the heat flow
+    board:  DQ 0       ; memory for the board
+    board_change: DQ 0 ; memory for the heat change across the board
+    width:  DD 0       ; width of the board
+    height: DD 0       ; height of the board
+    heater: DQ 0       ; heater heat value
+    cooler: DQ 0       ; cooler heat value
+    proportion: DD 0   ; proportion for the heat flow
     ; Memory for XMM registers.
-    v1: dd 0, 0, 0, 1
-    v2: dd 0, 0, 0, 1
+    v1: DD 0, 0, 0, 0
+    v2: DD 0, 0, 0, 0
 
 ; start initializes global variables needed for computing
 ; heat flow across the board. It also allocates new memory
@@ -113,16 +113,51 @@ loop_cells:
 ;   rdi - x coordinate for cell at the board
 ;   rsi - y coordinate for cell at the board
 cell_compute_change:
+    ; Load to rdx cell heat value.
+    mov rdx, 0x1337
+    ; Load heat to the v1 values.
+    call cell_set_right_heat_change
+    call cell_set_left_heat_change
+    call cell_set_up_heat_change
+    call cell_set_down_heat_change
+
+    ; Load proportions to v2 values.
+    mov eax, [proportion]
+    mov [v2], eax
+    mov [v2 + 4], eax
+    mov [v2 + 8], eax
+    mov [v2 + 12], eax
+
     movups xmm0, [v1]
     movups xmm1, [v2]
-    addps  xmm0, xmm1
+    mulps  xmm0, xmm1
     movups [v1], xmm0
     movups [v2], xmm1
-    mov rax, [v1+8]
+
+    ; Save the heat change in the board_change.
+    ; TODO: implement me
+
 	ret
+
+cell_set_right_heat_change:
+    mov DWORD[v1], 1
+    ret
+
+cell_set_left_heat_change:
+    mov DWORD[v1], 1
+    ret
+
+cell_set_up_heat_change:
+    mov DWORD[v1+8], 1
+    ret
+
+cell_set_down_heat_change:
+    mov DWORD[v1+12], 1
+    ret
 
 ; Arguments:
 ;   rdi - x coordinate for cell at the board
 ;   rsi - y coordinate for cell at the board
 cell_apply_change:
     ret
+
