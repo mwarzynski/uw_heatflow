@@ -14,6 +14,10 @@ void start(
 // step does one round of the simulation.
 void step();
 
+// cleanup should be used when simulating heat flow ended.
+// It frees used memory for computing heat flow.
+void cleanup();
+
 int main() {
     int width = 10;
     int height = 10;
@@ -23,23 +27,24 @@ int main() {
     M = malloc(sizeof(float)*width*height);
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
-            M[i*width + j] = 4;
+            M[i*width + j] = 20 + i*j;
         }
     }
-
     G = malloc(sizeof(float)*width*2);
     for (int i = 0; i < width; i++) {
-        G[i] = 8;
-        G[i + width] = 8;
+        G[i] = 300 + i;
+        G[i + width] = 400 + i;
     }
     C = malloc(sizeof(float)*height*2);
     for (int i = 0; i < height; i++) {
-        C[i] = 1;
-        C[i + height] = 1;
+        C[i] = i;
+        C[i + height] = 10 + i;
     }
 
+    // Call heatflow asm procedures.
 	start(width, height, M, G, C, weight);
 	step();
+    cleanup();
 
     free(M); free(G); free(C);
 	return 0;
