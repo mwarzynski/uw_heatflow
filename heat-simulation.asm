@@ -235,9 +235,9 @@ step_row_4:
     ; Save them to 'cache'.
     mov ecx, 0
     step_row_save:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx ; x += ecx
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx ; x += ecx
 
     mov rax, rsi
     mov esi, [width]
@@ -247,7 +247,8 @@ step_row_4:
     mul rsi
 
     mov edi, [vs + ecx]
-    mov [cache + rax], edi
+    mov rsi, [cache]
+    mov [rsi + rax], edi
 
     inc ecx
     cmp ecx, [rsp + 8]
