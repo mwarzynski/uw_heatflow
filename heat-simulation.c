@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
             return 2;
         }
     } else {
-        flow = 0.5;
+        flow = 0.125;
     }
 
     if (initialize(argv[1]) != 0) {
