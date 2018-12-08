@@ -40,7 +40,9 @@ start:
     mov [board], rdx
     mov [heater], rcx
     mov [cooler], r8
-    mov [proportion], r9d
+    movups [vs], xmm0
+    mov eax, [vs]
+    mov [proportion], eax
     ; Allocate memory (size of two rows) for processing the board.
     mov rax, 0
     mov eax, [width] ; rax = [width]
@@ -78,11 +80,11 @@ step_rows:
     mov DWORD[rsp + 4], 0 ; y
 
     step_row_y:
-    mov DWORD[rsp + 4], 0 ; x = 0
+    mov DWORD[rsp], 0     ; x = 0
     step_row_x:
 
-    mov edi, [rsp + 4]
-    mov esi, [rsp]
+    mov edi, [rsp]     ; edi = x
+    mov esi, [rsp + 4] ; esi = y
     call step_row_4
 
     mov edi, [rsp]
@@ -91,9 +93,9 @@ step_rows:
     cmp edi, [width]
     jl step_row_x
 
-    mov esi, [rsp]
+    mov esi, [rsp + 4]
     inc esi
-    mov [rsp], esi
+    mov [rsp + 4], esi
     cmp esi, [height]
     jne step_row_y
 
@@ -102,22 +104,22 @@ step_rows:
     ret
 
 ; Arguments:
-;   rdi - y, row number
-;   rsi - x, starting point to process 4 cells to the right direction
+;   rdi - x, starting point to process 4 cells to the right direction
+;   rsi - y, row number
 ; Used registers: rdi, rsi, rdx, rcx.
 step_row_4:
     push rbp
     mov rbp, rsp
     sub rsp, 16
-    mov [rsp], edi     ; y
-    mov [rsp + 4], esi ; x
+    mov [rsp], edi     ; x
+    mov [rsp + 4], esi ; y
 
     ; Compute how many cells to process.
     ; Store result in [rsp + 8].
     mov eax, [width]
-    sub eax, esi
-    mov esi, 4
-    cmp eax, esi
+    sub eax, edi
+    mov edi, 4
+    cmp eax, edi
     jl step_row_4_c
     mov eax, 4
 
@@ -127,12 +129,12 @@ step_row_4:
     ; Set left.
     mov ecx, 0
     step_row_add_left:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx
-    dec esi ; x -= 1
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx
+    dec edi ; x -= 1
     call heat_value
-    mov [vs + ecx], eax
+    mov [vs + (ecx*4)], eax
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_add_left
@@ -141,12 +143,12 @@ step_row_4:
     ; Add right.
     mov ecx, 0
     step_row_add_right:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx
-    inc esi ; x += 1
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx
+    inc edi ; x += 1
     call heat_value
-    mov [vs + ecx], eax
+    mov [vs + (ecx*4)], eax
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_add_right
@@ -157,12 +159,12 @@ step_row_4:
     ; Add up.
     mov ecx, 0
     step_row_add_up:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx
-    dec edi ; y -= 1
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx
+    dec esi ; y -= 1
     call heat_value
-    mov [vs + ecx], eax
+    mov [vs + (ecx*4)], eax
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_add_up
@@ -173,12 +175,12 @@ step_row_4:
     ; Add down.
     mov ecx, 0
     step_row_add_down:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx
-    inc edi ; y += 1
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx
+    inc esi ; y += 1
     call heat_value
-    mov [vs + ecx], eax
+    mov [vs + (ecx*4)], eax
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_add_down
@@ -189,25 +191,29 @@ step_row_4:
     ; Sub 4*cell value.
     mov ecx, 0
     step_row_4cell_value:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx
     call heat_value
-    mov edi, 4
-    mul edi
-    mov [vs + ecx], eax
+    mov [vs + (ecx*4)], eax
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_4cell_value
 
     movups xmm1, [vs] ; Sub 4* cell value.
+    mov DWORD[vs],    0x40800000 ; = float(4)
+    mov DWORD[vs+4],  0x40800000 ; = float(4)
+    mov DWORD[vs+8],  0x40800000 ; = float(4)
+    mov DWORD[vs+12], 0x40800000 ; = float(4)
+    movups xmm2, [vs]
+    mulps xmm1, xmm2
     subps xmm0, xmm1
 
     ; Mul proportion.
     mov ecx, 0
     step_row_proportion:
     mov edi, [proportion]
-    mov [vs + ecx], edi
+    mov [vs + (ecx*4)], edi
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_proportion
@@ -218,11 +224,11 @@ step_row_4:
     ; Add current cell's heat value to compute heat after the flow.
     mov ecx, 0
     step_row_final:
-    mov edi, [rsp]
-    mov esi, [rsp + 4]
-    add esi, ecx
+    mov edi, [rsp]     ; x
+    mov esi, [rsp + 4] ; y
+    add edi, ecx
     call heat_value
-    mov [vs + ecx], eax
+    mov [vs + (ecx*4)], eax
     inc ecx
     cmp ecx, [rsp + 8]
     jl step_row_final
@@ -239,14 +245,14 @@ step_row_4:
     mov esi, [rsp + 4] ; y
     add edi, ecx ; x += ecx
 
-    mov rax, rsi
+    mov eax, esi
     mov esi, [width]
-    mul rsi
+    mul esi
     add eax, edi
-    mov rsi, 4
-    mul rsi
+    mov esi, 4
+    mul esi
 
-    mov edi, [vs + ecx]
+    mov edi, [vs + (ecx*4)]
     mov rsi, [cache]
     mov [rsi + rax], edi
 
@@ -266,16 +272,15 @@ flush_board:
     mov rcx, rax
 
     mov rdi, 0
+    mov rax, 0
     flush_board_loop:
 
-    mov rax, rdi
-    mov rsi, 4
-    mul rsi
     mov rdx, [cache]
     mov esi, [rdx + rax]
     mov rdx, [board]
     mov [rdx + rax], esi
 
+    add rax, 4
     inc rdi
     cmp rcx, rdi
     jne flush_board_loop

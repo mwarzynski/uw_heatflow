@@ -27,23 +27,29 @@ int main() {
     M = malloc(sizeof(float)*width*height);
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
-            M[i*width + j] = 20 + i*j;
+            M[i*width + j] = 50;
         }
     }
     G = malloc(sizeof(float)*width*2);
     for (int i = 0; i < width; i++) {
-        G[i] = 300 + i;
-        G[i + width] = 400 + i;
+        G[i] = 100;
+        G[i + width] = 100;
     }
     C = malloc(sizeof(float)*height*2);
     for (int i = 0; i < height; i++) {
-        C[i] = i;
-        C[i + height] = 10 + i;
+        C[i] = 0;
+        C[i + height] = 0;
     }
 
     // Call heatflow asm procedures.
 	start(width, height, M, G, C, weight);
-	step();
+
+    step();
+    step();
+    step();
+    step();
+    step();
+
     cleanup();
 
     free(M); free(G); free(C);
