@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
         printf("Usage: heatflow ./input-file\n");
         printf("       heatflow ./input-file flow\n");
         printf("Parameter 'flow' is optional.\n\n");
-        printf("While in the stepping stage:");
+        printf("While in the stepping stage:\n");
         printf("    press Enter to do next step.\n");
         printf("    press 'e' to exit.\n");
         return 1;
