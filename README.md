@@ -1,5 +1,7 @@
 # Zadanie 2: symulacja rozchodzenia się ciepła
 
+![](animation.gif)
+
 Naszym celem będzie napisanie funkcji symulujących fikcyjny przepływ
 pewnej wartości pseudofizycznej (o wartościach z dziedziny liczb 
 rzeczywistych) przez prostokątną siatkę.  Dla ułatwienia nazwijmy tę
