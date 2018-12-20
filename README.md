@@ -80,12 +80,3 @@ wiersz z wartościami chłodnic
 Mile widziany prosty plik testowy z danymi.
 
 Rozwiązania nie zawierające pliku `Makefile` nie będą sprawdzane.
-
-Rozwiązania (procedury w asemblerze i program w C z przykładowymi 
-testami) należy wysłać do dnia 19 grudnia (23:59) pocztą na 
-`zbyszek@mimuw.edu.pl` jako **pojedynczy**
-załącznik -- archiwum o nazwie wskazującej na autora (np.
-`ab123456-zad2.tgz`), spakowane z osobnego katalogu o tej samej
-nazwie (ale bez tgz).  Program ma działać w środowisku zainstalowanym 
-W laboratoriach w trybie 64-bitowym.
-
