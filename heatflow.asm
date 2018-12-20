@@ -4,15 +4,15 @@ extern malloc
 extern free
 
 section .text
-	global start
-	global step
+    global start
+    global step
     global cleanup
 
 section .data
     align 16 ; Align data to 16 bytes.
     ; Memory for the heat flow simulation.
     board: DQ 0      ; memory for the board
-    cache: DQ 0       ; memory for the heat change across the board
+    cache: DQ 0      ; memory for the heat change across the board
     width: DD 0      ; width of the board
     height: DD 0     ; height of the board
     heater: DQ 0     ; heater heat value
@@ -35,8 +35,8 @@ section .data
 ;   r9  - value for the proportion of heat flow
 start:
     ; Set up global variables (from arguments).
-	mov [width], edi
-	mov [height], esi
+    mov [width], edi
+    mov [height], esi
     mov [board], rdx
     mov [heater], rcx
     mov [cooler], r8
